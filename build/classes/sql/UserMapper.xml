@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="UserMapper">
+
+	<resultMap id="userSelectMap" type="user">
+		<result property="userId" column="user_id" jdbcType="VARCHAR" />
+		<result property="userName" column="user_name" jdbcType="VARCHAR" />
+		<result property="password" column="password" jdbcType="VARCHAR" />
+		<result property="role" column="role" jdbcType="VARCHAR" />
+		<result property="phone" column="cell_phone" jdbcType="VARCHAR" />
+		<result property="addr" column="addr" jdbcType="VARCHAR" />
+		<result property="email" column="email" jdbcType="VARCHAR" />
+		<result property="regDate" column="reg_date" jdbcType="DATE" />
+		<result property="profileImg" column="profile_img" jdbcType="VARCHAR" />
+		<result property="status" column="status" jdbcType="VARCHAR" />
+		
+	</resultMap>
+	  
+	<resultMap id="page" type="page">
+		<result property="currentPage" column="currentPage" jdbcType="INTEGER" />
+		<result property="totalCount" column="totalCount" jdbcType="INTEGER" />
+		<result property="pageSize" column="pageSize" jdbcType="INTEGER" />
+		<result property="maxPage" column="maxPage" jdbcType="INTEGER" />		
+	</resultMap>
+	
+	<resultMap id="userSelectList" type="user">
+		<result property="userId" column="user_id" jdbcType="VARCHAR" />
+		<result property="userName" column="user_name" jdbcType="VARCHAR" />
+		<result property="role" column="role" jdbcType="VARCHAR" />
+		<result property="phone" column="cell_phone" jdbcType="VARCHAR" />
+		<result property="addr" column="addr" jdbcType="VARCHAR" />
+		<result property="profileImg" column="profile_img" jdbcType="VARCHAR" />
+		<result property="status" column="status" jdbcType="VARCHAR" />
+		<result property="email" column="email" jdbcType="VARCHAR" />
+		<result property="maxPage" column="maxPage" jdbcType="INTEGER" />	
+		
+	</resultMap>
+
+	<select id="getUser" parameterType="string" resultMap="userSelectMap">
+		SELECT
+		user_id
+		,user_name
+		,password
+		,role
+		,cell_phone
+		,addr
+		,email
+		,reg_date
+		FROM
+		scott.users
+		WHERE user_id = #{userId}
+	</select>
+
+	<insert id="addUser" parameterType="user">
+		INSERT INTO USERS ( user_id,
+		password,
+		user_name,
+		role,
+		cell_phone,
+		addr,
+		email,
+		reg_date)
+		VALUES (
+		#{userId},
+		#{password},
+		#{userName},
+		'user',
+		#{phone},
+		#{addr},
+		#{email},
+		SYSDATE )
+	</insert>
+
+
+	<select id="checkDuplicate" parameterType="string" resultType="string">
+		SELECT DECODE( user_id, #{userId}, 200, 100 )
+		FROM USERS
+		WHERE user_id = #{userId}
+	</select>
+
+	<select id="getUserList" parameterType="Integer" resultMap="userSelectList">
+<!--  
+  	SELECT *
+      FROM (   SELECT  user_id
+                      ,user_name
+                      ,profile_img
+                      ,( SELECT CEIL(COUNT(*) / 10 ) 
+                           FROM users ) maxPage
+                 FROM USERS A
+                 WHERE ROWNUM BETWEEN 1 AND #{currentPage} * #{pageUnit} 
+                 ORDER BY user_id ) A
+     WHERE NOT EXISTS ( SELECT * FROM ( SELECT ROW_NUMBER() OVER (order by user_id)
+                                               ,user_id
+                                               ,user_name
+                          FROM USERS
+                          WHERE ( ROWNUM BETWEEN 1 AND ( #{currentPage} - 1 ) * #{pageUnit} )
+                      )
+     WHERE A.user_id = user_id )
+     ORDER  BY user_id	
+-->
+	
+  	SELECT *
+      FROM (   SELECT  user_id
+                      ,user_name
+                      ,profile_img
+                      ,status
+                      ,( SELECT CEIL(COUNT(*) / #{pageSize} ) 
+                           FROM users ) maxPage
+                 FROM USERS A
+                 WHERE ROWNUM BETWEEN 1 AND #{currentPage} * #{pageSize} 
+                 ORDER BY user_id ) A
+     WHERE NOT EXISTS ( SELECT * FROM ( SELECT user_id
+                                              ,user_name
+                                         FROM USERS
+                                         WHERE ( ROWNUM BETWEEN 0  AND  (#{currentPage} - 1) * #{pageSize} )
+                                         ORDER BY user_id
+                                       )
+                         WHERE A.user_id = user_id )
+       ORDER  BY user_id
+	</select>
+	
+	<update id="updateUser" parameterType="user">
+		UPDATE users SET user_name = #{userName},
+	                     password = #{password},
+	                     role = #{role},
+	                     cell_phone = #{phone},
+	                     addr = #{addr},
+	                     status = #{status},
+	                     email = #{email}
+	    WHERE user_id = #{userId}
+	</update>
+	
+	<delete id="deleteUser" parameterType="string" >
+		DELETE FROM USERS
+        WHERE user_id = #{userId}
+	</delete>
+	
+	
+</mapper>
+
+
+
+
