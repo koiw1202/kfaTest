@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 //==> PageNavigation 을 위한 Bean
 public class Page {
 	
+	
+//	ㄴㅁㄴㄴㅁ
 	///Field
 	private int currentPage;		// 현재페이지
 	private int totalCount;			// 총 게시물 수

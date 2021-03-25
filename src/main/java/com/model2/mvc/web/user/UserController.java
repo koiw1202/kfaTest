@@ -33,7 +33,7 @@ public class UserController {
 	@Value("#{commonProperties['pageSize']}")
 	private int pageSize;			// 한 페이지당 보여지는 게시물수
 	
-	
+	String gitTest ;
 	
 	public UserController() {
 		System.out.println(this.getClass());
