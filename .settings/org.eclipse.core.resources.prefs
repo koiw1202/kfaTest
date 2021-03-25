@@ -1,2 +1,5 @@
 eclipse.preferences.version=1
-encoding//WebContent/javascript/calendar.js=MS949
+encoding//WebContent/layout/left.jsp=UTF-8
+encoding//WebContent/main/main.jsp=UTF-8
+encoding//WebContent/test.jsp=UTF-8
+encoding//src/main/java/com/model2/mvc/web/user/UserController.java=UTF-8

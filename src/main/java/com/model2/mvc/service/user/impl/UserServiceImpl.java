@@ -1,6 +1,6 @@
 package com.model2.mvc.service.user.impl;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -8,17 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import com.model2.mvc.common.Search;
+import com.model2.mvc.common.Page;
 import com.model2.mvc.service.domain.User;
-import com.model2.mvc.service.user.UserService;
-import com.model2.mvc.service.user.UserDao;;
+import com.model2.mvc.service.user.UserDao;
+import com.model2.mvc.service.user.UserService;;
 
 
-//==> È¸¿ø°ü¸® ¼­ºñ½º ±¸Çö
+//==> È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 @Service("userServiceImpl")
 public class UserServiceImpl implements UserService{
 	
-	///Field
+//	///Field
 	@Autowired
 	@Qualifier("userDaoImpl")
 	private UserDao userDao;
@@ -30,37 +30,35 @@ public class UserServiceImpl implements UserService{
 	public UserServiceImpl() {
 		System.out.println(this.getClass());
 	}
-
-	///Method
-	public void addUser(User user) throws Exception {
-		userDao.addUser(user);
-	}
-
+	
 	public User getUser(String userId) throws Exception {
-		return userDao.getUser(userId);
-	}
-
-	public Map<String , Object > getUserList(Search search) throws Exception {
-		List<User> list= userDao.getUserList(search);
-		int totalCount = userDao.getTotalCount(search);
+		User user= userDao.getUser(userId);
 		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("list", list );
-		map.put("totalCount", new Integer(totalCount));
-		
-		return map;
+		return user ;
+	}
+	
+	public int addUser(User user) {
+		return userDao.addUser(user) ;
 	}
 
-	public void updateUser(User user) throws Exception {
-		userDao.updateUser(user);
+	public String checkDuplicate(String userId) {
+		return userDao.checkDuplicate(userId) ;
 	}
-
-	public boolean checkDuplication(String userId) throws Exception {
-		boolean result=true;
-		User user=userDao.getUser(userId);
-		if(user != null) {
-			result=false;
-		}
-		return result;
+	
+	public List<User> getUserList(Page page) {
+		return userDao.getUserList(page) ;
+	}
+	
+	public int updateUser(User user) {
+		return userDao.updateUser(user) ;
+	}
+	
+	public Map<String, Object> test(Page page) {
+		return userDao.test(page) ;
+	}
+	
+	public int deleteUser(String userId) {
+		return userDao.deleteUser(userId) ;
 	}
 }
+

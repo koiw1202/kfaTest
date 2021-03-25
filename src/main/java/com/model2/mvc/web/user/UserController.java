@@ -1,6 +1,6 @@
 package com.model2.mvc.web.user;
 
-import java.util.Map;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -12,162 +12,249 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.model2.mvc.common.Page;
-import com.model2.mvc.common.Search;
 import com.model2.mvc.service.domain.User;
 import com.model2.mvc.service.user.UserService;
 
-
-//==> ȸ������ Controller
 @Controller
 public class UserController {
-	
-	///Field
+
+	/// Field
 	@Autowired
 	@Qualifier("userServiceImpl")
 	private UserService userService;
-	//setter Method ���� ����
-		
-	public UserController(){
+	
+	@Value("#{commonProperties['pageUnit']}")
+	private int pageUnit ;			// 하단 페이지 번호 화면에 보여지는 수
+	@Value("#{commonProperties['pageSize']}")
+	private int pageSize;			// 한 페이지당 보여지는 게시물수
+	
+	
+	
+	public UserController() {
 		System.out.println(this.getClass());
 	}
 	
-	//==> classpath:config/common.properties  ,  classpath:config/commonservice.xml ���� �Ұ�
-	//==> �Ʒ��� �ΰ��� �ּ��� Ǯ�� �ǹ̸� Ȯ�� �Ұ�
-	@Value("#{commonProperties['pageUnit']}")
-	//@Value("#{commonProperties['pageUnit'] ?: 3}")
-	int pageUnit;
-	
-	@Value("#{commonProperties['pageSize']}")
-	//@Value("#{commonProperties['pageSize'] ?: 2}")
-	int pageSize;
-	
-	
-	@RequestMapping("/addUserView.do")
-	public String addUserView() throws Exception {
-
-		System.out.println("/addUserView.do");
+	@RequestMapping(value = "/login.do", method=RequestMethod.POST)
+	public String getUser(@ModelAttribute("user") User user, HttpSession httpSession, HttpServletRequest request, Model model ) throws Exception {
 		
-		return "redirect:/user/addUserView.jsp";
+		if( ((User)httpSession.getAttribute("user")) != null ) {
+			return "forward:/main/main.jsp";
+		}
+		
+		User dbUser = userService.getUser( user.getUserId()) ;
+		
+		//비밀번호가 일치할 경우
+		if( dbUser.getPassword().equals(user.getPassword())) {
+		
+			httpSession.setAttribute("user", dbUser);
+			httpSession.setMaxInactiveInterval( 3000 ) ;
+			model.addAttribute("user", dbUser) ;
+			System.out.println("DB에서 가져온 user 정보 출력") ;
+			System.out.println( dbUser.toString() );
+		
+		} else {
+			return "redirect:/index.jsp";
+		}
+		
+		return "forward:/main/main.jsp";
 	}
 	
-	@RequestMapping("/addUser.do")
-	public String addUser( @ModelAttribute("user") User user ) throws Exception {
-
-		System.out.println("/addUser.do");
-		//Business Logic
-		userService.addUser(user);
+	@RequestMapping(value="addUser.do", method=RequestMethod.POST)
+	public String addUser(@ModelAttribute("user") User user, HttpSession session ) {
+		System.out.println("addUser 실행");
+		System.out.println(user);
 		
-		return "redirect:/user/loginView.jsp";
+		if( ((User)session.getAttribute("user")).getRole().equals("admin")) {
+			userService.addUser(user) ;
+			
+			return "redirect:/main/main.jsp" ;
+			
+		}
+		
+		return "redirect:/common/error" ;
+		
 	}
 	
-	@RequestMapping("/getUser.do")
-	public String getUser( @RequestParam("userId") String userId , Model model ) throws Exception {
+	@ResponseBody
+	@RequestMapping(value="checkDuplicate.do", method=RequestMethod.GET)
+	public String checkDuplicate(@RequestParam(value = "userId", required=true) String userId) {
+			
+		System.out.println("checkDuplicate.do");
+		System.out.println("userId : " + userId);
 		
-		System.out.println("/getUser.do");
-		//Business Logic
-		User user = userService.getUser(userId);
-		// Model �� View ����
-		model.addAttribute("user", user);
+		String result = userService.checkDuplicate(userId);
+		
+		System.out.println("결과값  : " +  result );
+		
+		return result ;
+		
+	}
+	
+	@RequestMapping(value="logOut.do", method=RequestMethod.GET) 
+	public String logOut(HttpSession httpSession) {
+		System.out.println("logOut 실행");
+		
+		httpSession.removeAttribute("user");
+		
+		return "redirect:/index.jsp" ;
+		
+	}
+	
+	@RequestMapping(value="main.do", method=RequestMethod.GET)
+	public String main(HttpSession httpSession) {
+		System.out.println("main 실행");
+		
+		if(((User)httpSession.getAttribute("user")).getUserId() == null) {
+			System.out.println("userId가 null값 로그인 화면으로 이동");
+			return "redirect:/login.jsp" ;
+		}
+		
+		System.out.println("로그인한 상태이므로 메인화면으로 이동");
+		return "redirect:/main/main.jsp" ;
+		
+	}
+		
+	@RequestMapping(value="getUserList.do", method=RequestMethod.GET)
+	public String getUserList(@RequestParam(value="currentPage") int currentPage,  HttpSession session, Model model) {
+		System.out.println("getUserList.do 실행");
+		
+		if( !((User)session.getAttribute("user")).getRole().equals("admin") ) {
+			return "redirect:/main/main.jsp" ;
+		}
+		
+		Page page = new Page(currentPage, pageSize, pageUnit) ;
+		
+		List<User> list = userService.getUserList(page) ;
+		model.addAttribute("userList", list) ;
+		
+		if( page.getCurrentPage() > list.get(0).getMaxPage()) {
+			System.out.println("Requst한 page가 전체 페이지 게시물 수 보다 큼");
+			return "redirect:/main/main.jsp" ;
+		}
+		
+		page.setCurrentPage(currentPage) ;
+		
+		if( page.getCurrentPage() % 5 == 0 ) {
+			page.setBeginUnitPage( (currentPage / page.getPageUnit()) + (currentPage / page.getPageUnit() - 1) * 4 );			
+		} else {
+			page.setBeginUnitPage( currentPage / page.getPageUnit() * page.getPageUnit() + 1  ) ;
+		}
+		
+		page.setEndUnitPage( page.getBeginUnitPage() + page.getPageUnit() - 1 ); 
+		page.setMaxPage(list.get(0).getMaxPage());
+		
+		if( page.getMaxPage() < page.getEndUnitPage()) {
+			page.setEndUnitPage(list.get(0).getMaxPage()) ;
+		}
+		
+		System.out.println("Page : " + page.toString());
+		
+		model.addAttribute("resultPage", page) ;
+		return "forward:/user/userList.jsp" ;
+		
+	}
+	
+	@RequestMapping(value="getUser.do", method=RequestMethod.GET)
+	public String getUser(@RequestParam(value="userId") String userId, Model model, HttpSession session) throws Exception {
+		
+		System.out.println("getUSer.do");
+		System.out.println("userId : " + userId);
+		
+		if( !((User)session.getAttribute("user")).getRole().equals("admin") ) {
+			System.out.println("admin 계정이 아닙니다.");
+			return "redirect:/main/main.jsp" ;
+		}
+		
+		model.addAttribute("user", userService.getUser(userId)) ;
+		System.out.println("DB에서 가져온 user정보 : ");
+		System.out.println( userService.getUser(userId));
 		
 		return "forward:/user/getUser.jsp";
+		
 	}
 	
-	@RequestMapping("/updateUserView.do")
-	public String updateUserView( @RequestParam("userId") String userId , Model model ) throws Exception{
-
-		System.out.println("/updateUserView.do");
-		//Business Logic
-		User user = userService.getUser(userId);
-		// Model �� View ����
-		model.addAttribute("user", user);
+	@RequestMapping(value="updateUserView.do", method=RequestMethod.GET)
+	public String updateUserView(@RequestParam(value="userId") String userId, Model model, HttpSession session) {
 		
-		return "forward:/user/updateUser.jsp";
-	}
-	
-	@RequestMapping("/updateUser.do")
-	public String updateUser( @ModelAttribute("user") User user , Model model , HttpSession session) throws Exception{
-
-		System.out.println("/updateUser.do");
-		//Business Logic
-		userService.updateUser(user);
+		System.out.println("updateUserView.do 실행");
 		
-		String sessionId=((User)session.getAttribute("user")).getUserId();
-		if(sessionId.equals(user.getUserId())){
-			session.setAttribute("user", user);
+		if( !((User) session.getAttribute("user")).getRole().equals("admin") ) {
+		
+			return "redirect:/main/main.jsp" ;
 		}
 		
-		return "redirect:/getUser.do?userId="+user.getUserId();
+		return "redirect:/user/updateUserView.jsp" ;
 	}
 	
-	@RequestMapping("/loginView.do")
-	public String loginView() throws Exception{
-		
-		System.out.println("/loginView.do");
-
-		return "redirect:/user/loginView.jsp";
-	}
 	
-	@RequestMapping("/login.do")
-	public String login(@ModelAttribute("user") User user , HttpSession session ) throws Exception{
-		
-		System.out.println("/login.do");
-		//Business Logic
-		User dbUser=userService.getUser(user.getUserId());
-		
-		if( user.getPassword().equals(dbUser.getPassword())){
-			session.setAttribute("user", dbUser);
+	@RequestMapping(value="updateUser.do", method=RequestMethod.POST)
+	public String updateUser(@ModelAttribute("user") User user, HttpSession session) {
+		System.out.println("updateUser.do 실행");
+		System.out.println("가져온 user 정보" + user);
+			
+		if( !((User) session.getAttribute("user")).getRole().equals("admin") ) {
+			
+			return "redirect:/main/main.jsp" ;
 		}
 		
-		return "redirect:/index.jsp";
-	}
-	
-	@RequestMapping("/logout.do")
-	public String logout(HttpSession session ) throws Exception{
-		
-		System.out.println("/logout.do");
-		
-		session.invalidate();
-		
-		return "redirect:/index.jsp";
-	}
-	
-	@RequestMapping("/checkDuplication.do")
-	public String checkDuplication( @RequestParam("userId") String userId , Model model ) throws Exception{
-		
-		System.out.println("/checkDuplication.do");
-		//Business Logic
-		boolean result=userService.checkDuplication(userId);
-		// Model �� View ����
-		model.addAttribute("result", new Boolean(result));
-		model.addAttribute("userId", userId);
-
-		return "forward:/user/checkDuplication.jsp";
-	}
-	
-	@RequestMapping("/listUser.do")
-	public String listUser( @ModelAttribute("search") Search search , Model model , HttpServletRequest request) throws Exception{
-		
-		System.out.println("/listUser.do");
-		
-		if(search.getCurrentPage() ==0 ){
-			search.setCurrentPage(1);
+		if( user.getRole().equals("0") ) {
+			
+			user.setRole("admin");
+			
+		} else if( user.getRole().equals("1") ) {
+			
+			user.setRole("manager");
+			
+		} else if( user.getRole().equals("2") ) {
+			
+			user.setRole("user");
 		}
-		search.setPageSize(pageSize);
 		
-		// Business logic ����
-		Map<String , Object> map=userService.getUserList(search);
+		int result = userService.updateUser(user) ;
 		
-		Page resultPage = new Page( search.getCurrentPage(), ((Integer)map.get("totalCount")).intValue(), pageUnit, pageSize);
-		System.out.println(resultPage);
+		if( result == 1 ) {
+			System.out.println("update 성공");
+		} else if ( result == 0 ) {
+			System.out.println("update 실패");
+		}
 		
-		// Model �� View ����
-		model.addAttribute("list", map.get("list"));
-		model.addAttribute("resultPage", resultPage);
-		model.addAttribute("search", search);
-		
-		return "forward:/user/listUser.jsp";
+		return "forward:/user/updateUserView.jsp" ;
 	}
-}
+
+	@RequestMapping(value="deleteUser.do", method=RequestMethod.GET)
+	public int deleteUser( @RequestParam(value="userId") String userId ,HttpSession session ) {
+		
+		System.out.println( ((User)session.getAttribute("user")).toString() );
+		System.out.println("deleteUser 실행");
+		System.out.println(!((User)session.getAttribute("user")).getRole().equals("admin"));
+		
+		if( !((User)session.getAttribute("user")).getRole().equals("admin")) {
+		
+			System.out.println("admin 계정이 아닙니다.");
+			return 200 ;
+		
+		}
+		
+		System.out.println("userId : " + userId);
+		
+		return userService.deleteUser( userId ) ;
+		
+	}
+	
+} //End of Class
+
+
+
+
+
+
+
+
+
+
+

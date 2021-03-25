@@ -1,5 +1,7 @@
 package com.model2.mvc.common;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 //==> PageNavigation 을 위한 Bean
 public class Page {
@@ -7,7 +9,7 @@ public class Page {
 	///Field
 	private int currentPage;		// 현재페이지
 	private int totalCount;			// 총 게시물 수
-	private int pageUnit;			// 하단 페이지 번호 화면에 보여지는 수
+	private int pageUnit ;			// 하단 페이지 번호 화면에 보여지는 수
 	private int pageSize;			// 한 페이지당 보여지는 게시물수
 	private int maxPage;			// 최대 페이지 번호(전체 페이지)
 	private int beginUnitPage;	//화면에 보여지는 페이지 번호의 최소수
@@ -15,8 +17,20 @@ public class Page {
 	
 	///Constructor
 	public Page() {
+		
 	}
-	public Page( int currentPage, int totalCount,	int pageUnit, int pageSize ) {
+	
+	///Constructor
+	public Page(int currentPage, int pageSize, int pageUnit ) {
+		this.currentPage = currentPage ;
+		this.pageSize = pageSize ;
+		this.pageUnit = pageUnit ;
+	
+	}
+	
+	
+	
+	public Page( int currentPage, int totalCount, int pageUnit, int pageSize ) {
 		this.totalCount = totalCount;
 		this.pageUnit = pageUnit;
 		this.pageSize = pageSize;
@@ -24,11 +38,11 @@ public class Page {
 		this.maxPage = (pageSize == 0) ? totalCount :  (totalCount-1)/pageSize +1;
 		this.currentPage = ( currentPage > maxPage) ? maxPage : currentPage;
 		
-		this.beginUnitPage = ( (currentPage-1) / pageUnit ) * pageUnit +1 ;
+		this.beginUnitPage = ((currentPage-1) / pageUnit ) * pageUnit +1 ;
 		
 		if( maxPage <= pageUnit ){
 			this.endUnitPage = maxPage;
-		}else{
+		} else {
 			this.endUnitPage = beginUnitPage + (pageUnit -1);
 			if( maxPage <= endUnitPage){
 				this.endUnitPage = maxPage;

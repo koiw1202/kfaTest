@@ -1,104 +1,40 @@
-<%@ page contentType="text/html; charset=euc-kr" %>
-
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
 <html>
 <head>
-<title>Model2 MVC Shop</title>
-
-<link href="/css/left.css" rel="stylesheet" type="text/css">
-
+<link href="/assets/css/bootstrap.css" rel="stylesheet">
+<link href="/assets/css/facebook.css" rel="stylesheet">
 <script type="text/javascript">
-function history(){
-	popWin = window.open("/history.jsp","popWin","left=300, top=200, width=300, height=200, marginwidth=0, marginheight=0, scrollbars=no, scrolling=no, menubar=no, resizable=no");
-}
+	
 </script>
 </head>
-
-<body background="/images/left/imgLeftBg.gif" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0"  >
-
-<table width="159" border="0" cellspacing="0" cellpadding="0">
-
-<!--menu 01 line-->
-<tr>
-	<td valign="top"> 
-		<table  border="0" cellspacing="0" cellpadding="0" width="159" >	
-			<tr>
-				<c:if test="${ !empty user }">
-					<tr>
-						<td class="Depth03">
-							<a href="/getUser.do?userId=${user.userId}" target="rightFrame">∞≥¿Œ¡§∫∏¡∂»∏</a>
-						</td>
-					</tr>
-				</c:if>
-			
-				<c:if test="${user.role == 'admin'}">
-					<tr>
-						<td class="Depth03" >
-							<a href="/listUser.do" target="rightFrame">»∏ø¯¡§∫∏¡∂»∏</a>
-						</td>
-					</tr>
-				</c:if>
-			
-				<tr>
-					<td class="DepthEnd">&nbsp;</td>
-				</tr>
-		</table>
-	</td>
-</tr>
-
-<!--menu 02 line-->
-<c:if test="${user.role == 'admin'}">
-	<tr>
-		<td valign="top"> 
-			<table  border="0" cellspacing="0" cellpadding="0" width="159">
-				<tr>
-					<td class="Depth03">
-						<a href="../product/addProductView.jsp;" target="rightFrame">∆«∏≈ªÛ«∞µÓ∑œ</a>
-					</td>
-				</tr>
-				<tr>
-					<td class="Depth03">
-						<a href="/listProduct.do?menu=manage"  target="rightFrame">∆«∏≈ªÛ«∞∞¸∏Æ</a>
-					</td>
-				</tr>
-				<tr>
-					<td class="DepthEnd">&nbsp;</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-</c:if>
-
-<!--menu 03 line-->
-<tr>
-	<td valign="top"> 
-		<table  border="0" cellspacing="0" cellpadding="0" width="159">
-			<tr>
-				<td class="Depth03">
-					<a href="/listProduct.do?menu=search" target="rightFrame">ªÛ «∞ ∞À ªˆ</a>
-				</td>
-			</tr>
-			
-			<c:if test="${ !empty user && user.role == 'user'}">
-			<tr>
-				<td class="Depth03">
-					<a href="/listPurchase.do"  target="rightFrame">±∏∏≈¿Ã∑¬¡∂»∏</a>
-				</td>
-			</tr>
+<body>
+	<!-- sidebar -->
+	<div class="column col-sm-2 col-xs-1 sidebar-offcanvas" id="sidebar">
+		<ul class="nav">
+			<li><a href="#" data-toggle="offcanvas"
+				class="visible-xs text-center"><i class="glyphicon glyphicon-chevron-right"></i></a></li>
+		</ul>
+		<ul class="nav hidden-xs" id="lg-menu">
+			<li class=active"><a href="#featured"><i class="glyphicon glyphicon-list-alt"></i> Ï†ÑÏ≤¥ ÏßÑÌñâ ÌòÑÌô©</a></li>
+			<li><a href="#stories"><i class="glyphicon glyphicon-list"></i>Í∏àÏùº Ïù¥Ïäà</a></li>
+			<c:if test="${sessionScope.user.role eq 'admin'}">
+			<li><a href="/getUserList.do?currentPage=1"><i class="glyphicon glyphicon-paperclip"></i>ÏÇ¨Ïö©Ïûê Î™©Î°ù Ï°∞Ìöå</a></li>
+				<li><a href="/user/addUserView.jsp"><i class="glyphicon glyphicon-refresh"></i> ÌöåÏõê Îì±Î°ù</a></li>
 			</c:if>
-			
-			<tr>
-				<td class="DepthEnd">&nbsp;</td>
-			</tr>
-			<tr>
-				<td class="Depth03"><a href="javascript:history()">√÷±Ÿ ∫ª ªÛ«∞</a></td>
-			</tr>
-		</table>
-	</td>
-</tr>
+		</ul>
+		<!-- tiny only nav-->
+		<ul class="nav visible-xs" id="xs-menu">
+			<li><a href="#featured" class="text-center"><i class="glyphicon glyphicon-list-alt"></i></a></li>
+			<li><a href="#stories" class="text-center"><i class="glyphicon glyphicon-list"></i></a></li>
+			<li><a href="#" class="text-center"><i class="glyphicon glyphicon-paperclip"></i></a></li>
+			<li><a href="#" class="text-center"><i class="glyphicon glyphicon-refresh"></i></a></li>
+		</ul>
+	</div>
 
-</table>
+	<!-- /sidebar -->
 
 </body>
 </html>
